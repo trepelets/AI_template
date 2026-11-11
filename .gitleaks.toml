@@ -1,0 +1,48 @@
+title = "project gitleaks config"
+
+# Keep all default gitleaks rules and add generic ones that the defaults miss.
+# Add project-specific rules below (e.g. a vendor password variable name).
+[extend]
+useDefault = true
+
+# Literal passwords in JSON (workflow exports, configs): "password": "..."
+[[rules]]
+id = "json-password"
+description = "Literal password value in JSON"
+regex = '''(?i)"(?:password|passwd|pass|[a-z_]*_pass|[a-z_]*_password)"\s*:\s*"([^"$\{\}]{4,})"'''
+secretGroup = 1
+keywords = ["pass"]
+
+# Shell/env style assignment with a literal value, e.g. FOO_PASS or FOO_PASSWORD
+# (no spaces around "=", not $VAR / ${VAR}). Python variables are not matched.
+[[rules]]
+id = "env-password"
+description = "Literal password in an env/shell assignment"
+regex = '''\b[A-Z0-9_]*PASS(?:WORD)?=['"]?([^\s'"$\{\}()]{4,})'''
+secretGroup = 1
+keywords = ["PASS"]
+
+# Authorization: Token|Bearer <literal>
+[[rules]]
+id = "authorization-token"
+description = "Literal token in an Authorization header"
+regex = '''(?i)authorization["']?\s*[:=]\s*["']?(?:token|bearer)\s+([A-Za-z0-9_\-\.]{16,})'''
+secretGroup = 1
+keywords = ["authorization"]
+
+# curl -u user:password with a literal password
+[[rules]]
+id = "curl-basic-auth"
+description = "Literal credentials in curl -u"
+regex = '''curl[^\n]*\s-u\s+['"]?[^\s:'"$]+:([^\s'"$\{\}]{4,})'''
+secretGroup = 1
+keywords = ["curl"]
+
+[allowlist]
+description = "Documentation placeholders"
+regexes = [
+  '''(?i)^(?:pass|password|secret|changeme|example|placeholder|xxx+|\.\.\.|<[^>]+>)$''',
+]
+paths = [
+  '''docs/decisions/0000-template\.md''',
+]
